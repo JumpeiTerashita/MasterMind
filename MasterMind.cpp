@@ -11,6 +11,15 @@ int inputNumBox[4]; /*いれるすうじおきば*/
 
 int Cnt = 0;
 
+void resetNum(int* hideBox, int*inputNum) {
+	for (int i = 0; i < 4; i++)
+	{
+		hideBox[i] = 0;
+		inputNum[i] = 0;
+	}
+	return;
+}
+
 void makeNum(void) {
 RESTART:
 	init_genrand((unsigned)time(NULL));
@@ -31,6 +40,7 @@ int inputNum(void)
 {
 	int inputNum;
 	scanf_s("%d", &inputNum);
+	//危険入力回避
 	if (inputNum > 9999 || inputNum < 1000) {
 		printf("その入力は許可しないッ！\n『ゲームオーバー』だ…！\n");
 		getchar();
@@ -57,9 +67,9 @@ void judge(void)
 			printf("1~9までの数と言ったはずだッ！\n0を打つのは『ルール違反』だ…！\n");
 			return;
 		}
-		for (int j = i+1; j < 4; j++)
+		for (int j = i + 1; j < 4; j++)
 		{
-			if (inputNumBox[i]==inputNumBox[j])
+			if (inputNumBox[i] == inputNumBox[j])
 			{
 				printf("バラバラの『四桁』と言ったはずだッ！\n同じ数字を打つのは『ルール違反』だ…！\n");
 				return;
@@ -107,6 +117,7 @@ void fin(void)
 int main(void)
 {
 
+	resetNum(hideNumBox, inputNumBox);
 	printf("\n私と『ゲーム』をしよう…ﾌﾌ\nルールは簡単 バラバラの『四桁』の『数字』を当ててもらう\n");
 	printf("1〜9までのバラバラの『四桁』だ…\n四桁のうちにその数字が含まれていれば『EAT』！さらに場所も合っていれば『BITE』ッ！\n");
 	printf("つまり『4EAT』すれば君の勝ちというわけだ…\n");
@@ -125,6 +136,8 @@ int main(void)
 	}
 	fin();
 END:
+	getchar();
+
 	getchar();
 	return 0;
 }
