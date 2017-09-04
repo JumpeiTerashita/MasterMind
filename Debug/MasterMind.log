@@ -1,0 +1,4 @@
+﻿  MasterMind.cpp
+c:\users\vantan\documents\atelier\children\mastermind\mastermind.cpp(166): warning C4566: ユニバーサル文字名 '\u301C' によって表示されている文字は、現在のコード ページ (932) で表示できません
+  MasterMind.vcxproj -> C:\Users\vantan\Documents\Atelier\Children\MasterMind\Debug\MasterMind.exe
+  MasterMind.vcxproj -> C:\Users\vantan\Documents\Atelier\Children\MasterMind\Debug\MasterMind.pdb (Partial PDB)
