@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-
+// TODO : ここもstruct化してまとめたい
 int hideNumBox[4]; /*あてるべきすうじおきば*/
 int inputNumBox[4]; /*いれるすうじおきば*/
 
@@ -15,10 +15,10 @@ int inputCount = 0;
 constexpr int ERROR = 1;
 constexpr int INPUT_ENDED = 2;
 
-void initNum(int* hideBox, int* inputNum) {
+void initNum(int* hideBox, int* inputNum) 
+{
 
-	//配列　初期化
-
+	// 配列　初期化
 	for (int i = 0; i < 4; i++)
 	{
 		hideBox[i] = 0;
@@ -30,12 +30,12 @@ void initNum(int* hideBox, int* inputNum) {
 	return;
 }
 
-void generateRandomNum() {
+void generateRandomNum()
+{
+	// 秒数によって同じ正解になりうるので、init_genrandはmainに移しプログラム起動時に一度だけにする
+	//init_genrand((unsigned)time(NULL));
 
-	//4桁数字生成（かぶりなし）
-
-	init_genrand((unsigned)time(NULL));
-
+	// 4桁数字生成（かぶりなし）
 	int values[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	int size = sizeof(values) / sizeof(int);
 
@@ -78,7 +78,7 @@ int inputNum()
 {
 	std::string input;
 
-	if (!std::getline(std::cin,input))
+	if (!std::getline(std::cin, input))
 	{
 		return INPUT_ENDED;
 	}
@@ -86,7 +86,6 @@ int inputNum()
 	// 4文字でなければ受け付けない
 	if (input.size() != 4)
 	{
-		inputCount++;
 		printf("四桁の数字を入力したまえッ！\n『ルール違反』だ…！\n");
 		dispPunishMessage();
 		return ERROR;
@@ -95,7 +94,6 @@ int inputNum()
 	// 4文字すべてが数字か確認する
 	for (char ch : input) {
 		if (ch < '0' || ch > '9') {
-			inputCount++;
 			printf("数字以外は許可しないッ！\n");
 			dispPunishMessage();
 			return ERROR;
@@ -156,39 +154,52 @@ bool hasDuplicate()
 	return false;
 }
 
-void judge()
+bool isValidInput()
 {
-	inputCount++;
-	int eat = 0, bite = 0;
-	//ルール違反ジャッジ
+	// ルール違反ジャッジ
 	if (isIncludeZero()) {
-		printf("1~9までの数と言ったはずだッ！\n");
+		printf("1〜9までの数と言ったはずだッ！\n");
 		printf("『0』を打つのは『ルール違反』だ…！\n");
 		dispPunishMessage();
-		return;
+		return false;
 	}
-	if (hasDuplicate())
-	{
+
+	if (hasDuplicate()) {
 		printf("バラバラの『四桁』と言ったはずだッ！\n");
 		printf("同じ数字を打つのは『ルール違反』だ…！\n");
 		dispPunishMessage();
-		return;
+		return false;
 	}
 
-	//eat bite ジャッジ
+	return true;
+}
+
+struct JudgeResult
+{
+	int eat;
+	int bite;
+};
+
+JudgeResult judge()
+{
+	JudgeResult result = { 0,0 };
+
+	// eat bite ジャッジのみをさせる
 	for (int i = 0; i < 4; i++)
 	{
-		if (inputNumBox[i] == hideNumBox[i]) eat++;
-		else for (int n = 0; n < 4; n++)
+		if (inputNumBox[i] == hideNumBox[i])
 		{
-			if (inputNumBox[i] == hideNumBox[n]) {
-				bite++;
+			result.eat++;
+		}
+		else for (int j = 0; j < 4; j++)
+		{
+			if (inputNumBox[i] == hideNumBox[j]) {
+				result.bite++;
 			}
 		}
 	}
-	//結果表示
-	printf("%dEAT！ %dBITE！\n", eat, bite);
-	return;
+
+	return result;
 }
 
 
@@ -208,7 +219,7 @@ void fin()
 	printf("Congratulations!\n");
 	if (inputCount <= 10) printf("たったの%d回で当てるとは…\nいや、恐れいったよ\n", inputCount);
 	else printf("%d回目でようやく当たったようだな…\nその『忍耐力』は褒めてやる\n", inputCount);
-	
+
 	return;
 }
 
@@ -235,7 +246,7 @@ bool askRetry()
 		printf("0か1を入力したまえッ！\n");
 	}
 
-	
+
 	/*int retryInput;
 	scanf_s("%d", &retryInput);
 	if (retryInput == 0) return true;
@@ -245,6 +256,8 @@ bool askRetry()
 
 int main(void)
 {
+	init_genrand((unsigned)time(NULL));
+
 	do
 	{
 		system("cls");
@@ -272,11 +285,21 @@ int main(void)
 				return 0;
 			}
 
+			// 一行の入力を受け取ったら、内容にかかわらず1回と数える
+			inputCount++;
+
 			if (inputResult == ERROR) {
 				continue;
 			}
 
-			judge();
+			if (!isValidInput())
+			{
+				continue;
+			}
+
+			JudgeResult result = judge();
+			//結果表示
+			printf("%dEAT！ %dBITE！\n", result.eat, result.bite);
 		}
 		fin();
 		//getchar();
