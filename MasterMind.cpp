@@ -1,15 +1,19 @@
-﻿#define ERROR 1
-
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 #include "MT.h"
+#include <iterator> // std::size のため
+#include <iostream>
+#include <string>
 
 
 int hideNumBox[4]; /*あてるべきすうじおきば*/
 int inputNumBox[4]; /*いれるすうじおきば*/
 
 int inputCount = 0;
+
+constexpr int ERROR = 1;
+constexpr int INPUT_ENDED = 2;
 
 void initNum(int* hideBox, int* inputNum) {
 
@@ -65,52 +69,116 @@ void generateRandomNum() {
 	return;
 }
 
+void dispPunishMessage()
+{
+	printf("これも試行回数にカウントするからな…やれやれだぜ\n");
+}
+
 int inputNum()
 {
-	int inputNum;
-	scanf_s("%d", &inputNum);
-	//危険入力回避
-	if (inputNum > 9999 || inputNum < 1000) {
+	std::string input;
+
+	if (!std::getline(std::cin,input))
+	{
+		return INPUT_ENDED;
+	}
+
+	// 4文字でなければ受け付けない
+	if (input.size() != 4)
+	{
 		inputCount++;
-		printf("その入力は許可しないッ！\n");
-		getchar();
-		getchar();
+		printf("四桁の数字を入力したまえッ！\n『ルール違反』だ…！\n");
+		dispPunishMessage();
 		return ERROR;
 	}
-	inputNumBox[3] = inputNum % 10;
-	inputNum = inputNum / 10;
-	inputNumBox[2] = inputNum % 10;
-	inputNum = inputNum / 10;
-	inputNumBox[1] = inputNum % 10;
-	inputNum = inputNum / 10;
-	inputNumBox[0] = inputNum % 10;
+
+	// 4文字すべてが数字か確認する
+	for (char ch : input) {
+		if (ch < '0' || ch > '9') {
+			inputCount++;
+			printf("数字以外は許可しないッ！\n");
+			dispPunishMessage();
+			return ERROR;
+		}
+	}
+
+	// 文字を整数に変換して配列に格納する
+	for (int i = 0; i < 4; i++) {
+		inputNumBox[i] = input[i] - '0';
+	}
 	return 0;
+
+	//int inputNum;
+	//scanf_s("%d", &inputNum);
+	////危険入力回避
+	//if (inputNum > 9999 || inputNum < 1000) {
+	//	inputCount++;
+	//	printf("その入力は許可しないッ！\n");
+	//	getchar();
+	//	getchar();
+	//	return ERROR;
+	//}
+	//inputNumBox[3] = inputNum % 10;
+	//inputNum = inputNum / 10;
+	//inputNumBox[2] = inputNum % 10;
+	//inputNum = inputNum / 10;
+	//inputNumBox[1] = inputNum % 10;
+	//inputNum = inputNum / 10;
+	//inputNumBox[0] = inputNum % 10;
+	//return 0;
+}
+
+bool isIncludeZero()
+{
+	for (int i = 0; i < std::size(inputNumBox); i++)
+	{
+		if (inputNumBox[i] == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool hasDuplicate()
+{
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = i + 1; j < 4; j++)
+		{
+			if (inputNumBox[i] == inputNumBox[j])
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 void judge()
 {
 	inputCount++;
-	int hit = 0, bite = 0;
+	int eat = 0, bite = 0;
 	//ルール違反ジャッジ
-	for (int i = 0; i < 4; i++)
-	{
-		if (inputNumBox[i] == 0) {
-			printf("1~9までの数と言ったはずだッ！\n0を打つのは『ルール違反』だ…！\n");
-			return;
-		}
-		for (int j = i + 1; j < 4; j++)
-		{
-			if (inputNumBox[i] == inputNumBox[j])
-			{
-				printf("バラバラの『四桁』と言ったはずだッ！\n同じ数字を打つのは『ルール違反』だ…！\n");
-				return;
-			}
-		}
+	if (isIncludeZero()) {
+		printf("1~9までの数と言ったはずだッ！\n");
+		printf("『0』を打つのは『ルール違反』だ…！\n");
+		dispPunishMessage();
+		return;
 	}
-	//hit bite ジャッジ
+	if (hasDuplicate())
+	{
+		printf("バラバラの『四桁』と言ったはずだッ！\n");
+		printf("同じ数字を打つのは『ルール違反』だ…！\n");
+		dispPunishMessage();
+		return;
+	}
+
+	//eat bite ジャッジ
 	for (int i = 0; i < 4; i++)
 	{
-		if (inputNumBox[i] == hideNumBox[i]) hit++;
+		if (inputNumBox[i] == hideNumBox[i]) eat++;
 		else for (int n = 0; n < 4; n++)
 		{
 			if (inputNumBox[i] == hideNumBox[n]) {
@@ -119,7 +187,7 @@ void judge()
 		}
 	}
 	//結果表示
-	printf("%dEAT！ %dBITE！\n", hit, bite);
+	printf("%dEAT！ %dBITE！\n", eat, bite);
 	return;
 }
 
@@ -140,18 +208,38 @@ void fin()
 	printf("Congratulations!\n");
 	if (inputCount <= 10) printf("たったの%d回で当てるとは…\nいや、恐れいったよ\n", inputCount);
 	else printf("%d回目でようやく当たったようだな…\nその『忍耐力』は褒めてやる\n", inputCount);
-	getchar();
+	
 	return;
 }
 
 bool askRetry()
 {
-	printf("で…どうする？『再び』か？ 再びかァァーッ！！\n");
-	printf("（リトライ　= 0 、終了　= 1 を入力）\n");
-	int retryInput;
+	while (true)
+	{
+		printf("で…どうする？『再び』か？ 再びかァァーッ！！\n");
+		printf("（リトライ　= 0 、終了　= 1 を入力）\n");
+
+		std::string input;
+		if (!std::getline(std::cin, input)) {
+			return false;
+		}
+
+		if (input == "0") {
+			return true;
+		}
+
+		if (input == "1") {
+			return false;
+		}
+
+		printf("0か1を入力したまえッ！\n");
+	}
+
+	
+	/*int retryInput;
 	scanf_s("%d", &retryInput);
 	if (retryInput == 0) return true;
-	return false;
+	return false;*/
 }
 
 
@@ -163,7 +251,9 @@ int main(void)
 		initNum(hideNumBox, inputNumBox);
 
 		printf("\n私と『ゲーム』をしよう…ﾌﾌ\nルールは簡単 バラバラの『四桁』の『数字』を当ててもらう\n");
-		printf("1〜9までのバラバラの『四桁』だ…\n四桁のうちにその数字が含まれていれば『EAT』！さらに場所も合っていれば『BITE』ッ！\n");
+		printf("1〜9までのバラバラの『四桁』だ…\n");
+		printf("数字と場所が合っていれば『EAT』！\n");
+		printf("数字は合っているが、場所が違えば『BITE』ッ！\n");
 		printf("つまり『4EAT』すれば君の勝ちというわけだ…\n");
 		generateRandomNum();
 		printf("Open the GAME!\n");
@@ -174,11 +264,22 @@ int main(void)
 			if (inputCount == 10) printf("\n『素数』を数えて落ち着くんだ…\n『素数』は1と自分の数でしか割れない数字…\n勇気を与えてくれる\n");
 			if (inputCount == 15) printf("\n『ひとりの囚人は壁を見ていた』\n『もうひとりの囚人は 鉄格子からのぞく星をみていた』\nお前はどっちだ？\n");
 			printf("\nさあ、数字を入力したまえ…\n");
-			if (inputNum() == ERROR) continue;
+
+			int inputResult = inputNum();
+
+			if (inputResult == INPUT_ENDED) {
+				printf("\n入力が終了したため、ゲームを終了する…アリーヴェデルチ！(さよならだ)\n");
+				return 0;
+			}
+
+			if (inputResult == ERROR) {
+				continue;
+			}
+
 			judge();
 		}
 		fin();
-		getchar();
+		//getchar();
 
 
 	} while (askRetry() == true);
